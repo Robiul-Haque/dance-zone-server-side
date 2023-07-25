@@ -3,6 +3,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 const cors = require('cors');
 const { MongoClient, ServerApiVersion } = require('mongodb');
+require('dotenv').config();
 
 // middleware
 app.use(cors());
@@ -27,6 +28,26 @@ async function run() {
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
+
+        const summerCampSchoolDB = client.db("summer_camp_school");
+        const userCollection = summerCampSchoolDB.collection("users");
+
+
+        // User info api
+        app.post('/login-user', async (req, res) => {
+            const userInfo = req.body;
+            const userEmail = { email: userInfo.email };
+            const existingUser = await userCollection.findOne(userEmail);
+            console.log(existingUser);
+            if (existingUser) {
+                return res.send({ message: 'user already exists' });
+            }
+            const result = await userCollection.insertOne(userInfo);
+            res.send(result);
+        });
+
+
+
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
@@ -40,5 +61,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`summer camp school server is running on port ${port}`);
-})
+    console.log(`Summer camp school server is running on port ${port}`);
+});
