@@ -33,9 +33,10 @@ async function run() {
         const userCollection = summerCampSchoolDB.collection("users");
 
 
-        // User info api
+        // User login info api
         app.post('/login-user', async (req, res) => {
             const userInfo = req.body;
+            console.log(userInfo);
             const userEmail = { email: userInfo.email };
             const existingUser = await userCollection.findOne(userEmail);
             console.log(existingUser);
