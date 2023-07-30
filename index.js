@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 5000;
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
 // middleware
@@ -33,7 +33,7 @@ async function run() {
         const userCollection = summerCampSchoolDB.collection("users");
 
 
-        // User login info api
+        // user login info api
         app.post('/login-user', async (req, res) => {
             const userInfo = req.body;
             console.log(userInfo);
@@ -47,7 +47,44 @@ async function run() {
             res.send(result);
         });
 
+        // 
 
+        // manage user api
+        app.get('/manage-user', async (req, res) => {
+            const result = await userCollection.find().toArray();
+            res.send(result);
+        });
+
+        // manage user role update api
+        // make student to admin
+        app.patch('/manage-user/update-role-admin/:userId', async (req, res) => {
+            const userId = req.params.userId;
+            console.log(userId);
+            const filter = { _id: new ObjectId(userId) }
+            const options = { upsert: true };
+            const updateUserRole = {
+                $set: {
+                    role: 'admin',
+                },
+            };
+            const result = await userCollection.updateOne(filter, updateUserRole, options);
+            res.send(result);
+        });
+
+        // make student to instructor
+        app.patch('/manage-user/update-role-instructor/:userId', async (req, res) => {
+            const userId = req.params.userId;
+            console.log(userId);
+            const filter = { _id: new ObjectId(userId) }
+            const options = { upsert: true };
+            const updateUserRole = {
+                $set: {
+                    role: 'instructor',
+                },
+            };
+            const result = await userCollection.updateOne(filter, updateUserRole, options);
+            res.send(result);
+        });
 
     } finally {
         // Ensures that the client will close when you finish/error
