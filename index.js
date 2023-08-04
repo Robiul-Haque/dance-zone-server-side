@@ -31,12 +31,12 @@ async function run() {
 
         const summerCampSchoolDB = client.db("summer_camp_school");
         const userCollection = summerCampSchoolDB.collection("users");
+        const classCollection = summerCampSchoolDB.collection("classes");
 
 
         // user login info api
         app.post('/login-user', async (req, res) => {
             const userInfo = req.body;
-            console.log(userInfo);
             const userEmail = { email: userInfo.email };
             const existingUser = await userCollection.findOne(userEmail);
             console.log(existingUser);
@@ -47,8 +47,31 @@ async function run() {
             res.send(result);
         });
 
-        // 
 
+        // instructor
+        // verify instructor email
+        app.get('/instructor/:email', async (req, res) => {
+            const instructorEmail = req.params.email;
+            const query = await userCollection.findOne({ email: instructorEmail });
+            res.send(query);
+
+        })
+
+        // add class
+        app.post('/add-class', async (req, res) => {
+            const classData = req.body;
+            const result = await classCollection.insertOne(classData);
+            res.send(result);
+        });
+
+        // my class
+        app.get('/my-class', async (req, res) => {
+            const result = await classCollection.find().toArray();
+            res.send(result);
+        });
+
+
+        // admin
         // manage user api
         app.get('/manage-user', async (req, res) => {
             const result = await userCollection.find().toArray();
@@ -56,10 +79,8 @@ async function run() {
         });
 
         // manage user role update api
-        // make student to admin
         app.patch('/manage-user/update-role-admin/:userId', async (req, res) => {
             const userId = req.params.userId;
-            console.log(userId);
             const filter = { _id: new ObjectId(userId) }
             const options = { upsert: true };
             const updateUserRole = {
@@ -71,10 +92,8 @@ async function run() {
             res.send(result);
         });
 
-        // make student to instructor
         app.patch('/manage-user/update-role-instructor/:userId', async (req, res) => {
             const userId = req.params.userId;
-            console.log(userId);
             const filter = { _id: new ObjectId(userId) }
             const options = { upsert: true };
             const updateUserRole = {
@@ -85,6 +104,12 @@ async function run() {
             const result = await userCollection.updateOne(filter, updateUserRole, options);
             res.send(result);
         });
+
+        // manage all class
+        app.get('/manage-class', async (req, res) => {
+            const result = await classCollection.find().toArray();
+            res.send(result);
+        })
 
     } finally {
         // Ensures that the client will close when you finish/error
