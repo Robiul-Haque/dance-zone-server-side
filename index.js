@@ -32,6 +32,21 @@ async function run() {
         const summerCampSchoolDB = client.db("summer_camp_school");
         const userCollection = summerCampSchoolDB.collection("users");
         const classCollection = summerCampSchoolDB.collection("classes");
+        const selectCollection = summerCampSchoolDB.collection("selectCollection");
+
+
+        // home popular class get api
+        app.get('/home/class', async (req, res) => {
+            const result = await classCollection.find({ status: 'approve' }).limit(6).toArray();
+            res.send(result);
+        });
+
+        // home popular instructor get api
+        app.get('/home/instructor', async (req, res) => {
+            const result = await userCollection.find({ role: 'instructor' }).limit(6).toArray();
+            res.send(result);
+        });
+
 
 
         // user login info api
@@ -54,7 +69,6 @@ async function run() {
             const instructorEmail = req.params.email;
             const query = await userCollection.findOne({ email: instructorEmail });
             res.send(query);
-
         })
 
         // add class
@@ -105,11 +119,39 @@ async function run() {
             res.send(result);
         });
 
-        // manage all class
+        // manage all class get api
         app.get('/manage-class', async (req, res) => {
             const result = await classCollection.find().toArray();
             res.send(result);
         })
+
+        // manage class approve patch api
+        app.patch('/admin/approve-class/:id', async (req, res) => {
+            const class_id = req.params.id;
+            const query = classCollection.findOne({ _id: new ObjectId(class_id) });
+            const options = { upsert: true };
+            const update = {
+                $set: {
+                    status: 'accepted'
+                }
+            }
+            const result = classCollection.updateOne(query, update, options);
+            res.send(result);
+        });
+
+        // manage class deny patch api
+        app.patch('/admin/deny-class/:id', async (req, res) => {
+            const class_id = req.params.id;
+            const query = classCollection.findOne({ _id: new ObjectId(class_id) });
+            const options = { upsert: true };
+            const update = {
+                $set: {
+                    status: 'rejected'
+                }
+            }
+            const result = classCollection.updateOne(query, update, options);
+            res.send(result);
+        });
 
     } finally {
         // Ensures that the client will close when you finish/error
