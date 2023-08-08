@@ -37,7 +37,7 @@ async function run() {
 
         // home popular class get api
         app.get('/home/class', async (req, res) => {
-            const result = await classCollection.find({ status: 'approve' }).limit(6).toArray();
+            const result = await classCollection.find({ status: 'accepted' }).limit(6).toArray();
             res.send(result);
         });
 
@@ -46,7 +46,6 @@ async function run() {
             const result = await userCollection.find({ role: 'instructor' }).limit(6).toArray();
             res.send(result);
         });
-
 
 
         // user login info api
@@ -83,6 +82,35 @@ async function run() {
             const result = await classCollection.find().toArray();
             res.send(result);
         });
+
+        // edit my single class data get api
+        app.get('/my-class/edit/show-data/:id', async (req, res) => {
+            const class_id = req.params.id;
+            const result = await classCollection.findOne({ _id: new ObjectId(class_id) });
+            res.send(result);
+        });
+
+        // update my single class data post api
+        app.put('/my-class/update-data/:id', async (req, res) => {
+            const class_id = req.params.id;
+            const formData = req.body;
+            const query = { _id: new ObjectId(class_id) };
+            const options = { upset: true };
+            const updateDoc = {
+                $set: {
+                    class_name: formData.class_name,
+                    class_image: formData.class_image,
+                    instructor_name: formData.instructor_name,
+                    instructor_email: formData.instructor_email,
+                    available_seats: formData.available_seats,
+                    course_price: formData.course_price,
+                    status: formData.status,
+                    feedback: formData.feedback
+                }
+            }
+            const result = await classCollection.updateOne(query, updateDoc, options);
+            res.send(result);
+        })
 
 
         // admin
@@ -128,28 +156,57 @@ async function run() {
         // manage class approve patch api
         app.patch('/admin/approve-class/:id', async (req, res) => {
             const class_id = req.params.id;
-            const query = classCollection.findOne({ _id: new ObjectId(class_id) });
+            const query = { _id: new ObjectId(class_id) };
             const options = { upsert: true };
             const update = {
                 $set: {
                     status: 'accepted'
                 }
             }
-            const result = classCollection.updateOne(query, update, options);
+            const result = await classCollection.updateOne(query, update, options);
             res.send(result);
         });
 
         // manage class deny patch api
         app.patch('/admin/deny-class/:id', async (req, res) => {
             const class_id = req.params.id;
-            const query = classCollection.findOne({ _id: new ObjectId(class_id) });
+            const query = { _id: new ObjectId(class_id) };
             const options = { upsert: true };
             const update = {
                 $set: {
                     status: 'rejected'
                 }
             }
-            const result = classCollection.updateOne(query, update, options);
+            const result = await classCollection.updateOne(query, update, options);
+            res.send(result);
+        });
+
+        // manage class previous feed data get api
+        app.get('/admin/feedback/data/:id', async (req, res) => {
+            const class_id = req.params.id;
+            const result = await classCollection.findOne({ _id: new ObjectId(class_id) });
+            res.send(result);
+        });
+
+        // manage class feedback patch api
+        app.patch('/admin/feedback/:id', async (req, res) => {
+            const class_id = req.params.id;
+            const class_feedback = req.body;
+            const query = classCollection.findOne({ _id: new ObjectId(class_id) })
+            const options = { upsert: true }
+            const updateDocument = {
+                $set: {
+                    feedback: class_feedback.feedback
+                }
+            }
+            const result = await classCollection.updateOne(query, updateDocument, options)
+            res.send(result)
+        });
+
+        // manage class delete the class
+        app.delete('/admin/delete-class/:id', async (req, res) => {
+            const class_id = req.params.id;
+            const result = await classCollection.deleteOne({ _id: new ObjectId(class_id) });
             res.send(result);
         });
 
