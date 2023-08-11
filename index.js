@@ -31,13 +31,13 @@ async function run() {
 
         const summerCampSchoolDB = client.db("summer_camp_school");
         const userCollection = summerCampSchoolDB.collection("users");
-        const classCollection = summerCampSchoolDB.collection("classes");
-        const selectCollection = summerCampSchoolDB.collection("selectCollection");
+        const courseCollection = summerCampSchoolDB.collection("classes");
+        const selectedCourseCollection = summerCampSchoolDB.collection("selectedCourse");
 
 
-        // home popular class get api
-        app.get('/home/class', async (req, res) => {
-            const result = await classCollection.find({ status: 'accepted' }).limit(6).toArray();
+        // home popular course get api
+        app.get('/home/course', async (req, res) => {
+            const result = await courseCollection.find({ status: 'accepted' }).limit(6).toArray();
             res.send(result);
         });
 
@@ -47,19 +47,59 @@ async function run() {
             res.send(result);
         });
 
+        // all course get api
+        app.get('/all-course', async (req, res) => {
+            const result = await courseCollection.find().toArray();
+            res.send(result);
+        })
+
+        // all instructor get api
+        app.get('/all-instructor', async (req, res) => {
+            const result = await userCollection.find({ role: 'instructor' }).toArray();
+            res.send(result);
+        })
+
+        // single instructor total available course get api
+        // app.get('/single-instructor/total-course-count', async (req, res) => {
+        //     const instructorEmail = 'robiulcoc430@gmail.com';
+        //     const result = await courseCollection.estimatedDocumentCount({email: instructorEmail});
+        //     res.send(result);
+        // })
+
 
         // user login info api
         app.post('/login-user', async (req, res) => {
             const userInfo = req.body;
             const userEmail = { email: userInfo.email };
             const existingUser = await userCollection.findOne(userEmail);
-            console.log(existingUser);
             if (existingUser) {
                 return res.send({ message: 'user already exists', user: existingUser });
             }
             const result = await userCollection.insertOne(userInfo);
             res.send(result);
         });
+
+
+        // student dashboard
+        // student selected course post api
+        app.post('/student/selected-course', async (req, res) => {
+            const selectedCourse = req.body;
+            const result = await selectedCourseCollection.insertOne(selectedCourse);
+            res.send(result);
+        })
+
+        // student selected course get api
+        app.get('/student/selected-all-course', async (req, res) => {
+            const result = await selectedCourseCollection.find().toArray();
+            res.send(result);
+        })
+
+        // student selected course delete api
+        app.delete('/student/delete-selected-course/:id', async (req, res) => {
+            const course_id = req.params.id;
+            const result = await selectedCourseCollection.deleteOne({ _id: new ObjectId(course_id) });
+            res.send(result);
+        })
 
 
         // instructor
@@ -70,31 +110,31 @@ async function run() {
             res.send(query);
         })
 
-        // add class
-        app.post('/add-class', async (req, res) => {
-            const classData = req.body;
-            const result = await classCollection.insertOne(classData);
+        // add course
+        app.post('/add-course', async (req, res) => {
+            const courseData = req.body;
+            const result = await courseCollection.insertOne(courseData);
             res.send(result);
         });
 
-        // my class
-        app.get('/my-class', async (req, res) => {
-            const result = await classCollection.find().toArray();
+        // my course
+        app.get('/my-course', async (req, res) => {
+            const result = await courseCollection.find().toArray();
             res.send(result);
         });
 
-        // edit my single class data get api
-        app.get('/my-class/edit/show-data/:id', async (req, res) => {
-            const class_id = req.params.id;
-            const result = await classCollection.findOne({ _id: new ObjectId(class_id) });
+        // edit my single course data get api
+        app.get('/my-course/edit/show-data/:id', async (req, res) => {
+            const course_id = req.params.id;
+            const result = await courseCollection.findOne({ _id: new ObjectId(course_id) });
             res.send(result);
         });
 
-        // update my single class data post api
-        app.put('/my-class/update-data/:id', async (req, res) => {
-            const class_id = req.params.id;
+        // update my single course data post api
+        app.put('/my-course/update-data/:id', async (req, res) => {
+            const course_id = req.params.id;
             const formData = req.body;
-            const query = { _id: new ObjectId(class_id) };
+            const query = { _id: new ObjectId(course_id) };
             const options = { upset: true };
             const updateDoc = {
                 $set: {
@@ -108,7 +148,7 @@ async function run() {
                     feedback: formData.feedback
                 }
             }
-            const result = await classCollection.updateOne(query, updateDoc, options);
+            const result = await courseCollection.updateOne(query, updateDoc, options);
             res.send(result);
         })
 
@@ -147,66 +187,66 @@ async function run() {
             res.send(result);
         });
 
-        // manage all class get api
-        app.get('/manage-class', async (req, res) => {
-            const result = await classCollection.find().toArray();
+        // manage all course get api
+        app.get('/manage-course', async (req, res) => {
+            const result = await courseCollection.find().toArray();
             res.send(result);
         })
 
-        // manage class approve patch api
-        app.patch('/admin/approve-class/:id', async (req, res) => {
-            const class_id = req.params.id;
-            const query = { _id: new ObjectId(class_id) };
+        // manage course approve patch api
+        app.patch('/admin/approve-course/:id', async (req, res) => {
+            const course_id = req.params.id;
+            const query = { _id: new ObjectId(course_id) };
             const options = { upsert: true };
             const update = {
                 $set: {
                     status: 'accepted'
                 }
             }
-            const result = await classCollection.updateOne(query, update, options);
+            const result = await courseCollection.updateOne(query, update, options);
             res.send(result);
         });
 
-        // manage class deny patch api
-        app.patch('/admin/deny-class/:id', async (req, res) => {
-            const class_id = req.params.id;
-            const query = { _id: new ObjectId(class_id) };
+        // manage course deny patch api
+        app.patch('/admin/deny-course/:id', async (req, res) => {
+            const course_id = req.params.id;
+            const query = { _id: new ObjectId(course_id) };
             const options = { upsert: true };
             const update = {
                 $set: {
                     status: 'rejected'
                 }
             }
-            const result = await classCollection.updateOne(query, update, options);
+            const result = await courseCollection.updateOne(query, update, options);
             res.send(result);
         });
 
-        // manage class previous feed data get api
+        // manage course previous feed data get api
         app.get('/admin/feedback/data/:id', async (req, res) => {
-            const class_id = req.params.id;
-            const result = await classCollection.findOne({ _id: new ObjectId(class_id) });
+            const course_id = req.params.id;
+            const result = await courseCollection.findOne({ _id: new ObjectId(course_id) });
             res.send(result);
         });
 
-        // manage class feedback patch api
+        // manage course feedback patch api
         app.patch('/admin/feedback/:id', async (req, res) => {
-            const class_id = req.params.id;
-            const class_feedback = req.body;
-            const query = classCollection.findOne({ _id: new ObjectId(class_id) })
+            const course_id = req.params.id;
+            const course_feedback = req.body;
+            const query = courseCollection.findOne({ _id: new ObjectId(course_id) })
             const options = { upsert: true }
             const updateDocument = {
                 $set: {
-                    feedback: class_feedback.feedback
+                    feedback: course_feedback.feedback
                 }
             }
-            const result = await classCollection.updateOne(query, updateDocument, options)
+            const result = await courseCollection.updateOne(query, updateDocument, options)
             res.send(result)
         });
 
-        // manage class delete the class
-        app.delete('/admin/delete-class/:id', async (req, res) => {
-            const class_id = req.params.id;
-            const result = await classCollection.deleteOne({ _id: new ObjectId(class_id) });
+        // manage course delete the course
+        app.delete('/admin/delete-course/:id', async (req, res) => {
+            const course_id = req.params.id;
+            const result = await courseCollection.deleteOne({ _id: new ObjectId(course_id) });
             res.send(result);
         });
 
