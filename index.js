@@ -4,6 +4,7 @@ const port = process.env.PORT || 5000;
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
+const stripe = require("stripe")(process.env.stripe_secret_key);
 
 // middleware
 app.use(cors());
@@ -33,6 +34,7 @@ async function run() {
         const userCollection = summerCampSchoolDB.collection("users");
         const courseCollection = summerCampSchoolDB.collection("classes");
         const selectedCourseCollection = summerCampSchoolDB.collection("selectedCourse");
+        const paymentCollection = summerCampSchoolDB.collection("payment");
 
 
         // home popular course get api
@@ -60,11 +62,11 @@ async function run() {
         })
 
         // single instructor total available course get api
-        // app.get('/single-instructor/total-course-count', async (req, res) => {
-        //     const instructorEmail = 'robiulcoc430@gmail.com';
-        //     const result = await courseCollection.estimatedDocumentCount({email: instructorEmail});
-        //     res.send(result);
-        // })
+        app.get('/single-instructor/total-course-count', async (req, res) => {
+            const instructorEmail = 'robiulcoc430@gmail.com';
+            const result = await courseCollection.estimatedDocumentCount({email: instructorEmail});
+            res.send(result);
+        })
 
 
         // user login info api
@@ -98,6 +100,56 @@ async function run() {
         app.delete('/student/delete-selected-course/:id', async (req, res) => {
             const course_id = req.params.id;
             const result = await selectedCourseCollection.deleteOne({ _id: new ObjectId(course_id) });
+            res.send(result);
+        })
+
+        // student selected single course get api
+        app.get('/student/selected-single-course/:id', async (req, res) => {
+            const course_id = req.params.id;
+            const result = await selectedCourseCollection.findOne({ _id: new ObjectId(course_id) });
+            res.send(result);
+        })
+
+        // student selected course stripe payment post api
+        app.post('/student/selected-course/create-payment-intent', async (req, res) => {
+            const { price } = req.body;
+            const amount = price * 100;
+            const totalAmount = parseFloat(amount.toFixed(2));
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: totalAmount,
+                currency: "usd",
+                automatic_payment_methods: {
+                    enabled: true,
+                },
+            });
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            });
+        })
+
+        // after the successful stripe payment user and course data post api
+        app.post('/student/selected-course/payment-info', async (req, res) => {
+            const paymentInfo = req.body;
+            const result = await paymentCollection.insertOne(paymentInfo);
+            res.send(result);
+        });
+
+        // after the successful stripe payment delete the selected course
+        app.delete('/student/selected-course/:id', async (req, res) => {
+            const id = req.params.id;
+            const result = await selectedCourseCollection.deleteOne({ _id: new ObjectId(id) });
+            res.send(result)
+        })
+
+        // student enrolled course get api
+        app.get('/student/enrolled-course', async (req, res) => {
+            const result = await paymentCollection.find().toArray();
+            res.send(result);
+        })
+
+        // student payment history get api
+        app.get('/student/payment-history', async (req, res) => {
+            const result = await paymentCollection.find().toArray();
             res.send(result);
         })
 
