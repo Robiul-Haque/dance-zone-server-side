@@ -61,10 +61,17 @@ async function run() {
             res.send(result);
         })
 
+        // see all course by instructor get api
+        app.get('/see-all-course-by-instructor/:email', async (req, res) => {
+            const instructorEmail = req.params.email;
+            const result = await courseCollection.find({ instructor_email: instructorEmail }).toArray();
+            res.send(result);
+        })
+
         // single instructor total available course get api
-        app.get('/single-instructor/total-course-count', async (req, res) => {
-            const instructorEmail = 'robiulcoc430@gmail.com';
-            const result = await courseCollection.estimatedDocumentCount({email: instructorEmail});
+        app.get('/single-instructor/total-course-count/:email', async (req, res) => {
+            const instructorEmail = req.params.email;
+            const result = await courseCollection.find({ instructor_email: instructorEmail }).toArray();
             res.send(result);
         })
 
@@ -82,7 +89,15 @@ async function run() {
         });
 
 
-        // student dashboard
+        // student
+        // student dashboard statices
+        app.get('/student/all-statices', async (req, res) => {
+            const enrolledCourse = await paymentCollection.find().toArray();
+            const selectedCourse = await selectedCourseCollection.find().toArray();
+            const upcomingCourse = await courseCollection.find({ status: 'pending' }).toArray();
+            res.send({ enrolledCourse, selectedCourse, upcomingCourse });
+        })
+
         // student selected course post api
         app.post('/student/selected-course', async (req, res) => {
             const selectedCourse = req.body;
