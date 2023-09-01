@@ -35,6 +35,7 @@ async function run() {
         const courseCollection = summerCampSchoolDB.collection("classes");
         const selectedCourseCollection = summerCampSchoolDB.collection("selectedCourse");
         const paymentCollection = summerCampSchoolDB.collection("payment");
+        const contactUsCollection = summerCampSchoolDB.collection("contactUs");
 
 
         // home popular course get api
@@ -58,6 +59,13 @@ async function run() {
         // all instructor get api
         app.get('/all-instructor', async (req, res) => {
             const result = await userCollection.find({ role: 'instructor' }).toArray();
+            res.send(result);
+        })
+
+        // contact us message post api
+        app.post('/contact-us/message', async (req, res) => {
+            const message = req.body;
+            const result = await contactUsCollection.insertOne(message);
             res.send(result);
         })
 
@@ -202,7 +210,7 @@ async function run() {
             const course_id = req.params.id;
             const formData = req.body;
             const query = { _id: new ObjectId(course_id) };
-            const options = { upset: true };
+            const options = { upsert: true };
             const updateDoc = {
                 $set: {
                     class_name: formData.class_name,
@@ -221,6 +229,29 @@ async function run() {
 
 
         // admin
+        // admin dashboard statices
+        app.get('/admin-dashboard/statices', async (req, res) => {
+            // user status
+            const admin = await userCollection.countDocuments({ role: 'admin' });
+            const instructor = await userCollection.countDocuments({ role: 'instructor' });
+            const student = await userCollection.countDocuments({ role: 'student' });
+            // course status
+            const pending = await courseCollection.countDocuments({ status: 'pending' });
+            const accepted = await courseCollection.countDocuments({ status: 'accepted' });
+            const rejected = await courseCollection.countDocuments({ status: 'rejected' });
+            // contact message
+            const contactUnseenMessage = await contactUsCollection.countDocuments({ status: 'unseen' });
+            // total enrolled course
+            const enrolledCourse = await paymentCollection.countDocuments();
+            res.send({ admin, instructor, student, pending, accepted, rejected, contactUnseenMessage, enrolledCourse });
+        })
+
+        // admin dashboard statices total revenue
+        app.get('/admin-dashboard/statices/total-revenue', async (req, res) => {
+            const totalEnrolledCoursePrice = await paymentCollection.find().toArray();
+            res.send(totalEnrolledCoursePrice);
+        })
+
         // manage user api
         app.get('/manage-user', async (req, res) => {
             const result = await userCollection.find().toArray();
@@ -277,14 +308,14 @@ async function run() {
         // manage course deny patch api
         app.patch('/admin/deny-course/:id', async (req, res) => {
             const course_id = req.params.id;
-            const query = { _id: new ObjectId(course_id) };
+            const filter = await courseCollection.find({ _id: new ObjectId(course_id) });
             const options = { upsert: true };
             const update = {
                 $set: {
                     status: 'rejected'
                 }
             }
-            const result = await courseCollection.updateOne(query, update, options);
+            const result = await courseCollection.updateOne(filter, update, options);
             res.send(result);
         });
 
@@ -299,14 +330,14 @@ async function run() {
         app.patch('/admin/feedback/:id', async (req, res) => {
             const course_id = req.params.id;
             const course_feedback = req.body;
-            const query = courseCollection.findOne({ _id: new ObjectId(course_id) })
+            const filter = { _id: new ObjectId(course_id) }
             const options = { upsert: true }
             const updateDocument = {
                 $set: {
                     feedback: course_feedback.feedback
                 }
             }
-            const result = await courseCollection.updateOne(query, updateDocument, options)
+            const result = await courseCollection.updateOne(filter, updateDocument, options)
             res.send(result)
         });
 
@@ -316,6 +347,47 @@ async function run() {
             const result = await courseCollection.deleteOne({ _id: new ObjectId(course_id) });
             res.send(result);
         });
+
+        // contact us get api
+        app.get('/contact-us/message', async (req, res) => {
+            const result = await contactUsCollection.find().toArray();
+            res.send(result);
+        })
+
+        // admin dashboard contact us menu mew message count get api
+        app.get('/contact-us/total-new-message-count', async (req, res) => {
+            const result = await contactUsCollection.find({ status: 'unseen' }).toArray();
+            res.send(result);
+        });
+
+        // contact us seen message put api
+        app.put('/contact-us/single-massage-seen/:id', async (req, res) => {
+            const id = req.params.id;
+            const data = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updateDocument = {
+                $set: {
+                    status: data.status
+                }
+            }
+            const result = await contactUsCollection.updateOne(filter, updateDocument, options);
+            res.send(result);
+        })
+
+        // contact us single massage in modal get api
+        app.get('/contact-us/single-massage-modal/:id', async (req, res) => {
+            const id = req.params.id;
+            const result = await contactUsCollection.findOne({ _id: new ObjectId(id) });
+            res.send(result);
+        })
+
+        // contact us single massage delete api
+        app.delete('/contact-us/single-message/delete/:id', async (req, res) => {
+            const id = req.params.id;
+            const result = await contactUsCollection.deleteOne({ _id: new ObjectId(id) });
+            res.send(result);
+        })
 
     } finally {
         // Ensures that the client will close when you finish/error
