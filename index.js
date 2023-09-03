@@ -252,13 +252,42 @@ async function run() {
             res.send(totalEnrolledCoursePrice);
         })
 
+        // admin dashboard user get api
+        app.get('/admin-dashboard/statices/user', async (req, res) => {
+            const result = await userCollection.find().sort({ name: 1 }).limit(4).toArray();
+            res.send(result);
+        })
+
+        // admin dashboard approve course get api
+        app.get('/admin-dashboard/statices/approve-course', async (req, res) => {
+            const result = await courseCollection.find({ status: 'accepted' }).limit(4).toArray();
+            res.send(result);
+        })
+
+        // admin dashboard user get api
+        app.get('/admin-dashboard/')
+
         // manage user api
         app.get('/manage-user', async (req, res) => {
             const result = await userCollection.find().toArray();
             res.send(result);
         });
 
-        // manage user role update api
+        // manage user status update put api
+        app.put('/admin/manage-user/update/view-status/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const option = { upsert: true }
+            const updateDocument = {
+                $set: {
+                    status: 'seen'
+                }
+            }
+            const result = await userCollection.updateOne(filter, updateDocument, option);
+            res.send(result);
+        })
+
+        // manage user role admin update api
         app.patch('/manage-user/update-role-admin/:userId', async (req, res) => {
             const userId = req.params.userId;
             const filter = { _id: new ObjectId(userId) }
@@ -272,6 +301,7 @@ async function run() {
             res.send(result);
         });
 
+        // manage user role instructor update api
         app.patch('/manage-user/update-role-instructor/:userId', async (req, res) => {
             const userId = req.params.userId;
             const filter = { _id: new ObjectId(userId) }
@@ -308,7 +338,7 @@ async function run() {
         // manage course deny patch api
         app.patch('/admin/deny-course/:id', async (req, res) => {
             const course_id = req.params.id;
-            const filter = await courseCollection.find({ _id: new ObjectId(course_id) });
+            const filter = { _id: new ObjectId(course_id) };
             const options = { upsert: true };
             const update = {
                 $set: {
@@ -318,6 +348,20 @@ async function run() {
             const result = await courseCollection.updateOne(filter, update, options);
             res.send(result);
         });
+
+        // manage course update view status put api
+        app.put('/admin/manage-course/update/view-status/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const option = { upsert: true }
+            const updateDocument = {
+                $set: {
+                    view_status: 'seen'
+                }
+            }
+            const result = await courseCollection.updateOne(filter, updateDocument, option);
+            res.send(result);
+        })
 
         // manage course previous feed data get api
         app.get('/admin/feedback/data/:id', async (req, res) => {
@@ -341,12 +385,31 @@ async function run() {
             res.send(result)
         });
 
-        // manage course delete the course
+        // manage course delete the course api
         app.delete('/admin/delete-course/:id', async (req, res) => {
             const course_id = req.params.id;
             const result = await courseCollection.deleteOne({ _id: new ObjectId(course_id) });
             res.send(result);
         });
+
+        // payment history get api
+        app.get('/all-payment-history', async (req, res) => {
+            const result = await paymentCollection.find().toArray();
+            res.send(result);
+        })
+
+        // payment history unseen get api
+        app.get('/admin/payment-history/unseen', async (req, res) => {
+            const result = paymentCollection.find({ status: 'unseen' }).toArray();
+            res.send(result);
+        })
+
+        // payment history delete api
+        app.delete('/admin/delete-payment-history/:id', async (req, res) => {
+            const id = req.params.id;
+            const result = await paymentCollection.deleteOne({ _id: new ObjectId(id) });
+            res.send(result);
+        })
 
         // contact us get api
         app.get('/contact-us/message', async (req, res) => {
@@ -354,7 +417,7 @@ async function run() {
             res.send(result);
         })
 
-        // admin dashboard contact us menu mew message count get api
+        // contact us menu mew message count get api
         app.get('/contact-us/total-new-message-count', async (req, res) => {
             const result = await contactUsCollection.find({ status: 'unseen' }).toArray();
             res.send(result);
