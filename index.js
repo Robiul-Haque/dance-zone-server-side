@@ -157,6 +157,22 @@ async function run() {
             res.send(result);
         });
 
+        // after the successful stripe payment decrement course available seats
+        app.patch('/student/course/available-seat-decrement/:id', async (req, res) => {
+            const id = req.params.id;
+            const courseSeatDecrement = parseFloat(req.body.available_seats);
+            const query = { _id: new ObjectId(id) };
+            const option = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    available_seats: courseSeatDecrement - 1
+                }
+            }
+            const result = await courseCollection.updateOne(query, updateDoc, option);
+            console.log(result);
+            res.send(result);
+        })
+
         // after the successful stripe payment delete the selected course
         app.delete('/student/selected-course/:id', async (req, res) => {
             const id = req.params.id;
@@ -178,11 +194,39 @@ async function run() {
 
 
         // instructor
+        // instructor dashboard statices accepted course get api
+        app.get('/total-approve/course/:email', async (req, res) => {
+            const email = req.params.email;
+            const acceptedCourse = await courseCollection.find({ instructor_email: email, status: 'accepted' }).limit(4).sort({ class_name: -1 }).toArray();
+            res.send(acceptedCourse);
+        })
+
+        // instructor dashboard statices accepted course get api
+        app.get('/total-approve/course/:email', async (req, res) => {
+            const email = req.params.email;
+            const acceptedCourse = await courseCollection.find({ instructor_email: email, status: 'accepted' }).toArray();
+            res.send(acceptedCourse);
+        })
+
+        // instructor dashboard statices pending course get api
+        app.get('/total-pending/course/:email', async (req, res) => {
+            const email = req.params.email;
+            const pendingCourse = await courseCollection.find({ instructor_email: email, status: 'pending' }).toArray();
+            res.send(pendingCourse);
+        })
+
+        // instructor dashboard statices rejected course get api
+        app.get('/total-rejected/course/:email', async (req, res) => {
+            const email = req.params.email;
+            const rejectedCourse = await courseCollection.find({ instructor_email: email, status: 'rejected' }).toArray();
+            res.send(rejectedCourse);
+        })
+
         // verify instructor email
         app.get('/instructor/:email', async (req, res) => {
             const instructorEmail = req.params.email;
-            const query = await userCollection.findOne({ email: instructorEmail });
-            res.send(query);
+            const result = await userCollection.findOne({ email: instructorEmail });
+            res.send(result);
         })
 
         // add course
