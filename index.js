@@ -56,6 +56,13 @@ async function run() {
             res.send(result);
         })
 
+        // student enroll single course get api
+        app.get('/student/course/enroll/checkout/:id', async (req, res) => {
+            const id = req.params.id;
+            const result = await courseCollection.findOne({ _id: new ObjectId(id) });
+            res.send(result);
+        })
+
         // all instructor get api
         app.get('/all-instructor', async (req, res) => {
             const result = await userCollection.find({ role: 'instructor' }).toArray();
@@ -157,7 +164,7 @@ async function run() {
             res.send(result);
         });
 
-        // after the successful stripe payment decrement course available seats
+        // after the successful stripe payment decrement course available seats patch api
         app.patch('/student/course/available-seat-decrement/:id', async (req, res) => {
             const id = req.params.id;
             const courseSeatDecrement = parseFloat(req.body.available_seats);
@@ -169,15 +176,28 @@ async function run() {
                 }
             }
             const result = await courseCollection.updateOne(query, updateDoc, option);
-            console.log(result);
             res.send(result);
         })
 
-        // after the successful stripe payment delete the selected course
+        // after the successful stripe payment delete the selected course delete api
         app.delete('/student/selected-course/:id', async (req, res) => {
             const id = req.params.id;
             const result = await selectedCourseCollection.deleteOne({ _id: new ObjectId(id) });
             res.send(result)
+        })
+
+        // after the successful stripe payment get the course if exist the selected course get api
+        app.get('/student/enroll/course/after-get-selected-course-if-exist/:id', async (req, res) => {
+            const id = req.params.id;
+            const result = await selectedCourseCollection.findOne({ id: id });
+            res.send(result)
+        })
+
+        // after the successful stripe payment delete the course if exist the selected course delete api
+        app.delete('/student/delete/selected-course-if-exist/:id', async (req, res) => {
+            const id = req.params.id;
+            const result = await selectedCourseCollection.deleteOne({ _id: new ObjectId(id) });
+            res.send(result);
         })
 
         // student enrolled course get api
