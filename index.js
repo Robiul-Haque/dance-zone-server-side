@@ -38,6 +38,25 @@ async function run() {
         const contactUsCollection = summerCampSchoolDB.collection("contactUs");
 
 
+        // find user role for login
+        app.get('/login-user/:email', async (req, res) => {
+            const instructorEmail = req.params.email;
+            const result = await userCollection.findOne({ email: instructorEmail });
+            res.send(result);
+        })
+
+        // user login info api
+        app.post('/login-user', async (req, res) => {
+            const userInfo = req.body;
+            const existingUser = await userCollection.findOne({ email: userInfo.email });
+            if (existingUser) {
+                return res.send({ message: 'user already exists', user: existingUser });
+            }
+            const result = await userCollection.insertOne(userInfo);
+            res.send(result);
+        });
+
+
         // home popular course get api
         app.get('/home/course', async (req, res) => {
             const result = await courseCollection.find({ status: 'accepted' }).limit(6).toArray();
@@ -91,25 +110,20 @@ async function run() {
         })
 
 
-        // user login info api
-        app.post('/login-user', async (req, res) => {
-            const userInfo = req.body;
-            const userEmail = { email: userInfo.email };
-            const existingUser = await userCollection.findOne(userEmail);
-            if (existingUser) {
-                return res.send({ message: 'user already exists', user: existingUser });
-            }
-            const result = await userCollection.insertOne(userInfo);
-            res.send(result);
-        });
-
-
         // student
+        // student exist get api
+        app.get('/if-exist-student/:email', async (req, res) => {
+            const studentEmail = req.params.email;
+            const result = await userCollection.findOne({ email: studentEmail });
+            res.send(result);
+        })
+
         // student dashboard statices
-        app.get('/student/all-statices', async (req, res) => {
-            const enrolledCourse = await paymentCollection.find().toArray();
-            const selectedCourse = await selectedCourseCollection.find().toArray();
-            const upcomingCourse = await courseCollection.find({ status: 'pending' }).toArray();
+        app.get('/student/all-statices/:email', async (req, res) => {
+            const email = req.params.email;
+            const enrolledCourse = await paymentCollection.find({ user_email: email }).toArray();
+            const selectedCourse = await selectedCourseCollection.find({ user_email: email }).toArray();
+            const upcomingCourse = await courseCollection.find({ user_email: email, status: 'pending' }).limit(5).toArray();
             res.send({ enrolledCourse, selectedCourse, upcomingCourse });
         })
 
@@ -121,13 +135,14 @@ async function run() {
         })
 
         // student selected course get api
-        app.get('/student/selected-all-course', async (req, res) => {
-            const result = await selectedCourseCollection.find().toArray();
+        app.get('/student/selected-all-course/:email', async (req, res) => {
+            const userEmail = req.params.email;
+            const result = await selectedCourseCollection.find({ user_email: userEmail }).toArray();
             res.send(result);
         })
 
         // student selected course delete api
-        app.delete('/student/delete-selected-course/:id', async (req, res) => {
+        app.delete('/student/delete-selected-course/:id/:email', async (req, res) => {
             const course_id = req.params.id;
             const result = await selectedCourseCollection.deleteOne({ _id: new ObjectId(course_id) });
             res.send(result);
@@ -201,19 +216,28 @@ async function run() {
         })
 
         // student enrolled course get api
-        app.get('/student/enrolled-course', async (req, res) => {
-            const result = await paymentCollection.find().toArray();
+        app.get('/student/enrolled-course/:email', async (req, res) => {
+            const email = req.params.email;
+            const result = await paymentCollection.find({ user_email: email }).toArray();
             res.send(result);
         })
 
         // student payment history get api
-        app.get('/student/payment-history', async (req, res) => {
-            const result = await paymentCollection.find().toArray();
+        app.get('/student/payment-history/:email', async (req, res) => {
+            const email = req.params.email;
+            const result = await paymentCollection.find({ user_email: email }).toArray();
             res.send(result);
         })
 
 
         // instructor
+        // instructor exist get api
+        app.get('/if-exist-instructor/:email', async (req, res) => {
+            const instructorEmail = req.params.email;
+            const result = await userCollection.findOne({ email: instructorEmail });
+            res.send(result);
+        })
+
         // instructor dashboard statices accepted course get api
         app.get('/total-approve/course/:email', async (req, res) => {
             const email = req.params.email;
@@ -242,23 +266,24 @@ async function run() {
             res.send(rejectedCourse);
         })
 
-        // verify instructor email
-        app.get('/instructor/:email', async (req, res) => {
-            const instructorEmail = req.params.email;
-            const result = await userCollection.findOne({ email: instructorEmail });
-            res.send(result);
+        // instructor dashboard statices instructor total revenue
+        app.get('/total-revenue-by-instructor/:email', async (req, res) => {
+            const loginInstructorEmail = req.params.email;
+            const result = await paymentCollection.find({ instructor_email: loginInstructorEmail }).toArray();
+            res.send(result)
         })
 
         // add course
-        app.post('/add-course', async (req, res) => {
+        app.post('/add-course/:email', async (req, res) => {
             const courseData = req.body;
             const result = await courseCollection.insertOne(courseData);
             res.send(result);
         });
 
         // my course
-        app.get('/my-course', async (req, res) => {
-            const result = await courseCollection.find().toArray();
+        app.get('/my-course/:email', async (req, res) => {
+            const instructorEmail = req.params.email;
+            const result = await courseCollection.find({ instructor_email: instructorEmail }).toArray();
             res.send(result);
         });
 
@@ -270,7 +295,7 @@ async function run() {
         });
 
         // update my single course data post api
-        app.put('/my-course/update-data/:id', async (req, res) => {
+        app.put('/my-course/update-data/:id/:email', async (req, res) => {
             const course_id = req.params.id;
             const formData = req.body;
             const query = { _id: new ObjectId(course_id) };
@@ -293,6 +318,14 @@ async function run() {
 
 
         // admin
+        // admin exist get api
+        app.get('/if-exist-admin/:email', async (req, res) => {
+            const adminEmail = req.params.email;
+            const result = await userCollection.findOne({ email: adminEmail });
+            res.send(result);
+        });
+
+
         // admin dashboard statices
         app.get('/admin-dashboard/statices', async (req, res) => {
             // user status
