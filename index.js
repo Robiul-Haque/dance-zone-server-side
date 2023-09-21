@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -55,6 +56,13 @@ async function run() {
             const result = await userCollection.insertOne(userInfo);
             res.send(result);
         });
+
+        // create jwt access token for login user post api
+        app.post('/create-jwt-token', (req, res) => {
+            const userEmail = req.body;
+            const token = jwt.sign(userEmail, process.env.jwt_token_secret, { expiresIn: '1h' });
+            res.send({ token });
+        })
 
 
         // home popular course get api
@@ -309,7 +317,8 @@ async function run() {
                     available_seats: formData.available_seats,
                     course_price: formData.course_price,
                     status: formData.status,
-                    feedback: formData.feedback
+                    feedback: formData.feedback,
+                    view_status: formData.view_status
                 }
             }
             const result = await courseCollection.updateOne(query, updateDoc, options);
@@ -324,7 +333,6 @@ async function run() {
             const result = await userCollection.findOne({ email: adminEmail });
             res.send(result);
         });
-
 
         // admin dashboard statices
         app.get('/admin-dashboard/statices', async (req, res) => {
@@ -360,9 +368,6 @@ async function run() {
             const result = await courseCollection.find({ status: 'accepted' }).limit(4).toArray();
             res.send(result);
         })
-
-        // admin dashboard user get api
-        app.get('/admin-dashboard/')
 
         // manage user api
         app.get('/manage-user', async (req, res) => {
@@ -411,6 +416,13 @@ async function run() {
             const result = await userCollection.updateOne(filter, updateUserRole, options);
             res.send(result);
         });
+
+        // delete user delete api
+        app.delete('/user/delete/:id', async (req, res) => {
+            const userId = req.params.id;
+            const result = await userCollection.deleteOne({ _id: new ObjectId(userId) });
+            res.send(result);
+        })
 
         // manage all course get api
         app.get('/manage-course', async (req, res) => {
