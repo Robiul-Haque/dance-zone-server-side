@@ -24,7 +24,6 @@ const client = new MongoClient(uri, {
     }
 });
 
-
 const verifyToken = (req, res, next) => {
     const authorization = req.headers.authorization;
 
@@ -56,8 +55,8 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
         // Send a ping to confirm a successful connection
-        // await client.db("admin").command({ ping: 1 });
-        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        await client.db("admin").command({ ping: 1 });
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
         const summerCampSchoolDB = client.db("summer_camp_school");
         const userCollection = summerCampSchoolDB.collection("users");
@@ -282,35 +281,35 @@ async function run() {
         })
 
         // instructor dashboard statices accepted course get api
-        app.get('/total-approve/course/:email', verifyToken, async (req, res) => {
+        app.get('/total-approve/course-limit/:email', async (req, res) => {
             const email = req.params.email;
             const acceptedCourse = await courseCollection.find({ instructor_email: email, status: 'accepted' }).limit(4).sort({ class_name: -1 }).toArray();
             res.send(acceptedCourse);
         })
 
         // instructor dashboard statices accepted course get api
-        app.get('/total-approve/course/:email', verifyToken, async (req, res) => {
+        app.get('/total-approve/course/:email', async (req, res) => {
             const email = req.params.email;
             const acceptedCourse = await courseCollection.find({ instructor_email: email, status: 'accepted' }).toArray();
             res.send(acceptedCourse);
         })
 
         // instructor dashboard statices pending course get api
-        app.get('/total-pending/course/:email', verifyToken, async (req, res) => {
+        app.get('/total-pending/course/:email', async (req, res) => {
             const email = req.params.email;
             const pendingCourse = await courseCollection.find({ instructor_email: email, status: 'pending' }).toArray();
             res.send(pendingCourse);
         })
 
         // instructor dashboard statices rejected course get api
-        app.get('/total-rejected/course/:email', verifyToken, async (req, res) => {
+        app.get('/total-rejected/course/:email', async (req, res) => {
             const email = req.params.email;
             const rejectedCourse = await courseCollection.find({ instructor_email: email, status: 'rejected' }).toArray();
             res.send(rejectedCourse);
         })
 
         // instructor dashboard statices instructor total revenue
-        app.get('/total-revenue-by-instructor/:email', verifyToken, async (req, res) => {
+        app.get('/total-revenue-by-instructor/:email', async (req, res) => {
             const loginInstructorEmail = req.params.email;
             const result = await paymentCollection.find({ instructor_email: loginInstructorEmail }).toArray();
             res.send(result)
@@ -370,7 +369,7 @@ async function run() {
         });
 
         // admin dashboard statices
-        app.get('/admin-dashboard/statices', verifyToken, async (req, res) => {
+        app.get('/admin-dashboard/statices', async (req, res) => {
             // user status
             const admin = await userCollection.countDocuments({ role: 'admin' });
             const instructor = await userCollection.countDocuments({ role: 'instructor' });
@@ -387,19 +386,19 @@ async function run() {
         })
 
         // admin dashboard statices total revenue
-        app.get('/admin-dashboard/statices/total-revenue', verifyToken, async (req, res) => {
+        app.get('/admin-dashboard/statices/total-revenue', async (req, res) => {
             const totalEnrolledCoursePrice = await paymentCollection.find().toArray();
             res.send(totalEnrolledCoursePrice);
         })
 
         // admin dashboard user get api
-        app.get('/admin-dashboard/statices/user', verifyToken, async (req, res) => {
+        app.get('/admin-dashboard/statices/user', async (req, res) => {
             const result = await userCollection.find().sort({ name: 1 }).limit(4).toArray();
             res.send(result);
         })
 
         // admin dashboard approve course get api
-        app.get('/admin-dashboard/statices/approve-course', verifyToken, async (req, res) => {
+        app.get('/admin-dashboard/statices/approve-course', async (req, res) => {
             const result = await courseCollection.find({ status: 'accepted' }).limit(4).toArray();
             res.send(result);
         })
