@@ -64,13 +64,6 @@ async function run() {
             res.send(existingUser);
         })
 
-        // create jwt access token for login user post api
-        app.post('/create-jwt-token', (req, res) => {
-            const userEmail = req.body;
-            const token = jwt.sign(userEmail, process.env.jwt_token_secret, { expiresIn: '10h' });
-            res.send({ token });
-        })
-
 
         // home popular course get api
         app.get('/home/course', async (req, res) => {
