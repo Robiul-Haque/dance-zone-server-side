@@ -5,13 +5,11 @@ const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const stripe = require("stripe")(process.env.stripe_secret_key);
-import { injectSpeedInsights } from "@vercel/speed-insights"
 
 // middleware
 app.use(cors());
 app.use(express.json());
 
-injectSpeedInsights();
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.nt7otjy.mongodb.net/?retryWrites=true&w=majority`;
 
