@@ -5,6 +5,7 @@ const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const stripe = require("stripe")(process.env.stripe_secret_key);
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 // middleware
 app.use(cors());
