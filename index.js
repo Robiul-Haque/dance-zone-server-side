@@ -1,6 +1,5 @@
 const express = require('express');
 const app = express();
-const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -23,31 +22,6 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
-
-const verifyToken = (req, res, next) => {
-    const authorization = req.headers.authorization;
-
-    if (!authorization) {
-        return res.status(401).send({
-            error: true,
-            message: 'unauthorize access'
-        })
-    }
-
-    const token = authorization.split(' ')[1];
-
-    jwt.verify(token, process.env.jwt_token_secret, (err, decoded) => {
-        if (err) {
-            return res.status(403).send({
-                error: true,
-                message: 'unauthorize access'
-            })
-        }
-        req.decoded = decoded;
-        next();
-    });
-
-}
 
 
 async function run() {
@@ -161,7 +135,7 @@ async function run() {
         })
 
         // student dashboard statices
-        app.get('/student/all-statices/:email', verifyToken, async (req, res) => {
+        app.get('/student/all-statices/:email', async (req, res) => {
             const email = req.params.email;
             const enrolledCourse = await paymentCollection.find({ user_email: email }).toArray();
             const selectedCourse = await selectedCourseCollection.find({ user_email: email }).toArray();
@@ -177,7 +151,7 @@ async function run() {
         })
 
         // student selected course get api
-        app.get('/student/selected-all-course/:email', verifyToken, async (req, res) => {
+        app.get('/student/selected-all-course/:email', async (req, res) => {
             const userEmail = req.params.email;
             const result = await selectedCourseCollection.find({ user_email: userEmail }).toArray();
             res.send(result);
@@ -258,14 +232,14 @@ async function run() {
         })
 
         // student enrolled course get api
-        app.get('/student/enrolled-course/:email', verifyToken, async (req, res) => {
+        app.get('/student/enrolled-course/:email', async (req, res) => {
             const email = req.params.email;
             const result = await paymentCollection.find({ user_email: email }).toArray();
             res.send(result);
         })
 
         // student payment history get api
-        app.get('/student/payment-history/:email', verifyToken, async (req, res) => {
+        app.get('/student/payment-history/:email', async (req, res) => {
             const email = req.params.email;
             const result = await paymentCollection.find({ user_email: email }).toArray();
             res.send(result);
@@ -323,7 +297,7 @@ async function run() {
         });
 
         // my course
-        app.get('/my-course/:email', verifyToken, async (req, res) => {
+        app.get('/my-course/:email', async (req, res) => {
             const instructorEmail = req.params.email;
             const result = await courseCollection.find({ instructor_email: instructorEmail }).toArray();
             res.send(result);
@@ -404,7 +378,7 @@ async function run() {
         })
 
         // manage user api
-        app.get('/manage-user', verifyToken, async (req, res) => {
+        app.get('/manage-user', async (req, res) => {
             const result = await userCollection.find().toArray();
             res.send(result);
         });
@@ -452,14 +426,14 @@ async function run() {
         });
 
         // delete user delete api
-        app.delete('/user/delete/:id', verifyToken, async (req, res) => {
+        app.delete('/user/delete/:id', async (req, res) => {
             const userId = req.params.id;
             const result = await userCollection.deleteOne({ _id: new ObjectId(userId) });
             res.send(result);
         })
 
         // manage all course get api
-        app.get('/manage-course', verifyToken, async (req, res) => {
+        app.get('/manage-course', async (req, res) => {
             const result = await courseCollection.find().toArray();
             res.send(result);
         })
@@ -507,7 +481,7 @@ async function run() {
         })
 
         // manage course previous feed data get api
-        app.get('/admin/feedback/data/:id', verifyToken, async (req, res) => {
+        app.get('/admin/feedback/data/:id', async (req, res) => {
             const course_id = req.params.id;
             const result = await courseCollection.findOne({ _id: new ObjectId(course_id) });
             res.send(result);
@@ -536,7 +510,7 @@ async function run() {
         });
 
         // payment history get api
-        app.get('/all-payment-history', verifyToken, async (req, res) => {
+        app.get('/all-payment-history', async (req, res) => {
             const result = await paymentCollection.find().toArray();
             res.send(result);
         })
@@ -549,13 +523,13 @@ async function run() {
         })
 
         // contact us get api
-        app.get('/show-contact-us/message', verifyToken, async (req, res) => {
+        app.get('/show-contact-us/message', async (req, res) => {
             const result = await contactUsCollection.find().toArray();
             res.send(result);
         })
 
         // contact us menu mew message count get api
-        app.get('/contact-us/total-new-message-count', verifyToken, async (req, res) => {
+        app.get('/contact-us/total-new-message-count', async (req, res) => {
             const result = await contactUsCollection.find({ status: 'unseen' }).toArray();
             res.send(result);
         });
@@ -576,7 +550,7 @@ async function run() {
         })
 
         // contact us single massage in modal get api
-        app.get('/contact-us/single-massage-modal/:id', verifyToken, async (req, res) => {
+        app.get('/contact-us/single-massage-modal/:id', async (req, res) => {
             const id = req.params.id;
             const result = await contactUsCollection.findOne({ _id: new ObjectId(id) });
             res.send(result);
