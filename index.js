@@ -31,7 +31,7 @@ async function run() {
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
-        const summerCampSchoolDB = client.db("summer_camp_school");
+        const summerCampSchoolDB = client.db("dance_zone");
         const userCollection = summerCampSchoolDB.collection("users");
         const courseCollection = summerCampSchoolDB.collection("classes");
         const selectedCourseCollection = summerCampSchoolDB.collection("selectedCourse");
@@ -41,8 +41,8 @@ async function run() {
 
         // find user role for login
         app.get('/login-user/:email', async (req, res) => {
-            const instructorEmail = req.params.email;
-            const result = await userCollection.findOne({ email: instructorEmail });
+            const userEmail = req.params.email;
+            const result = await userCollection.findOne({ email: userEmail });
             res.send(result);
         })
 
