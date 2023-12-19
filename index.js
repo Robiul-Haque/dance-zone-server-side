@@ -31,12 +31,12 @@ async function run() {
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
-        const summerCampSchoolDB = client.db("dance_zone");
-        const userCollection = summerCampSchoolDB.collection("users");
-        const courseCollection = summerCampSchoolDB.collection("classes");
-        const selectedCourseCollection = summerCampSchoolDB.collection("selectedCourse");
-        const paymentCollection = summerCampSchoolDB.collection("payment");
-        const contactUsCollection = summerCampSchoolDB.collection("contactUs");
+        const danceZoneDB = client.db("dance_zone");
+        const userCollection = danceZoneDB.collection("users");
+        const courseCollection = danceZoneDB.collection("classes");
+        const selectedCourseCollection = danceZoneDB.collection("selectedCourse");
+        const paymentCollection = danceZoneDB.collection("payment");
+        const contactUsCollection = danceZoneDB.collection("contactUs");
 
 
         // find user role for login
