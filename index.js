@@ -13,8 +13,6 @@ app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.nt7otjy.mongodb.net/?retryWrites=true&w=majority`;
 
-// mongodb://robiulcoc420:<password>@ac-apalki2-shard-00-00.nt7otjy.mongodb.net:27017,ac-apalki2-shard-00-01.nt7otjy.mongodb.net:27017,ac-apalki2-shard-00-02.nt7otjy.mongodb.net:27017/?ssl=true&replicaSet=atlas-vglbtw-shard-0&authSource=admin&retryWrites=true&w=majority
-
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
     serverApi: {
@@ -34,13 +32,13 @@ async function run() {
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
 
-
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
     }
 }
 run().catch(console.dir);
+
 const danceZoneDB = client.db("dance_zone");
 const userCollection = danceZoneDB.collection("users");
 const courseCollection = danceZoneDB.collection("classes");
